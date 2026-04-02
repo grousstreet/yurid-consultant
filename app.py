@@ -356,6 +356,11 @@ if not st.session_state.email:
         col1, col2 = st.columns(2)
         with col1:
             if st.button("✅ Подтвердить", type="primary", use_container_width=True):
+                
+                if email != email.lower():
+                    st.error("Email должен быть введён только маленькими буквами.")
+                    st.stop()
+                    
                 if "@" in email and "." in email:
                     if st.session_state.auth_mode == "register":
                         if register_user(email):
