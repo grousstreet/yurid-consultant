@@ -208,8 +208,8 @@ with st.sidebar:
     st.caption("Торайгыров Университет • 2026")
 
     if st.session_state.email:
-        st.success(f"✅ {st.session_state.email}")
-        if st.button("🚪 Выйти", use_container_width=True):
+        st.success(f"{st.session_state.email}")
+        if st.button("Выйти", use_container_width=True):
             st.session_state.email = None
             st.session_state.auth_mode = None
             st.rerun()
