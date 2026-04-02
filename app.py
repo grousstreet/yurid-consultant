@@ -14,18 +14,75 @@ try:
 except ImportError:
     PDF_AVAILABLE = False
 
-st.set_page_config(
-    page_title="ЮрИИ Консультант",
-    page_icon="⚖️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# ====================== ДВУЯЗЫЧНЫЙ СЛОВАРЬ ======================
+LANG = {
+    "ru": {
+        "page_title": "⚖️ ЮрИИ Консультант",
+        "sidebar_title": "⚖️ ЮрИИ Консультант",
+        "sidebar_caption": "Торайгыров Университет • 2026",
+        "login": "Войти",
+        "register": "Регистрация",
+        "logout": "Выйти",
+        "auth_required": "🔑 Требуется авторизация",
+        "new_chat": "➕ Новый чат",
+        "your_chats": "Ваши чаты",
+        "download_txt": "Скачать TXT",
+        "download_pdf": "⬇️ Скачать PDF",
+        "user_label": "Вы вошли как:",
+        "chat_input": "Опишите вашу юридическую ситуацию...",
+        "attention": "⚠️ Внимание: Ответы носят исключительно информационный характер и не являются официальной юридической консультацией. Для защиты ваших прав обращайтесь к адвокату или в компетентный орган.",
+        "login_header": "🔑 Вход",
+        "register_header": "📝 Регистрация",
+        "confirm": "✅ Подтвердить",
+        "cancel": "❌ Отмена",
+        "email_error": "Введите корректный email",
+        "email_lower_error": "Email должен быть введён только маленькими буквами",
+        "registration_success": "Регистрация успешна!",
+        "login_success": "Вход выполнен!",
+        "user_not_found": "Пользователь не найден. Зарегистрируйтесь.",
+        "export_error": "reportlab не установлен"
+    },
+    "kz": {
+        "page_title": "⚖️ ЮрИИ Кеңесші",
+        "sidebar_title": "⚖️ ЮрИИ Кеңесші",
+        "sidebar_caption": "Торайғыров Университет • 2026",
+        "login": "Кіру",
+        "register": "Тіркелу",
+        "logout": "Шығу",
+        "auth_required": "🔑 Авторизация қажет",
+        "new_chat": "➕ Жаңа чат",
+        "your_chats": "Сіздің чаттарыңыз",
+        "download_txt": "Жүктеу TXT",
+        "download_pdf": "⬇️ Жүктеу PDF",
+        "user_label": "Сіз кірдіңіз:",
+        "chat_input": "Сіздің заңдық жағдайыңызды сипаттаңыз...",
+        "attention": "⚠️ Назар аударыңыз: Жауаптар тек ақпараттық сипатта болады және ресми заңдық кеңес емес. Құқықтарыңызды қорғау үшін адвокатқа немесе тиісті органға хабарласыңыз.",
+        "login_header": "🔑 Кіру",
+        "register_header": "📝 Тіркелу",
+        "confirm": "✅ Растау",
+        "cancel": "❌ Болдырмау",
+        "email_error": "Тек дұрыс email енгізіңіз",
+        "email_lower_error": "Email тек кіші әріптермен енгізілуі керек",
+        "registration_success": "Тіркелу сәтті өтті!",
+        "login_success": "Кіру сәтті болды!",
+        "user_not_found": "Пайдаланушы табылмады. Тіркеліңіз.",
+        "export_error": "reportlab орнатылмаған"
+    }
+}
 
+# ====================== Настройка страницы ======================
+if "lang" not in st.session_state:
+    st.session_state.lang = "ru"
+
+texts = LANG[st.session_state.lang]
+
+st.set_page_config(page_title=texts["page_title"], page_icon="⚖️", layout="wide", initial_sidebar_state="expanded")
+
+# ====================== OpenAI ======================
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=st.secrets["OPENROUTER_API_KEY"],
 )
-
 SYSTEM_PROMPT = """
 Ты — ЮрИИ Консультант, официальный ИИ-помощник Торайгыров Университета (Павлодар, Казахстан).
 Ты отвечаешь ТОЛЬКО по законодательству Республики Казахстан.
@@ -90,6 +147,7 @@ SYSTEM_PROMPT = """
 Помогать пользователям (гражданам, студентам, предпринимателям, пенсионерам) быстро понимать свои права и получать конкретные действия для решения проблемы, включая судебную практику и прогноз возможного исхода.
 """
 
+
 # ====================== БАЗА ДАННЫХ ======================
 DB_NAME = "yurii.db"
 
@@ -106,7 +164,6 @@ def init_db():
                     email TEXT PRIMARY KEY,
                     created_at TEXT NOT NULL
                  )''')
-    
     c.execute('''CREATE TABLE IF NOT EXISTS chats (
                     id TEXT PRIMARY KEY,
                     user_email TEXT NOT NULL,
@@ -115,7 +172,6 @@ def init_db():
                     updated_at TEXT NOT NULL,
                     FOREIGN KEY(user_email) REFERENCES users(email) ON DELETE CASCADE
                  )''')
-    
     c.execute('''CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     chat_id TEXT NOT NULL,
@@ -125,15 +181,13 @@ def init_db():
                     FOREIGN KEY(chat_id) REFERENCES chats(id) ON DELETE CASCADE
                  )''')
     conn.commit()
-
 init_db()
 
 def register_user(email: str) -> bool:
     conn = get_db_connection()
     c = conn.cursor()
     try:
-        c.execute("INSERT INTO users (email, created_at) VALUES (?, ?)",
-                  (email, datetime.now().isoformat()))
+        c.execute("INSERT INTO users (email, created_at) VALUES (?, ?)", (email, datetime.now().isoformat()))
         conn.commit()
         return True
     except sqlite3.IntegrityError:
@@ -143,8 +197,7 @@ def login_user(email: str) -> bool:
     conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT email FROM users WHERE email = ?", (email,))
-    exists = c.fetchone() is not None
-    return exists
+    return c.fetchone() is not None
 
 def create_chat(user_email: str, title: str = "Новый чат") -> str:
     chat_id = str(uuid.uuid4())
@@ -181,11 +234,10 @@ def get_user_chats(email: str):
 def update_chat_title(chat_id: str, title: str):
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("UPDATE chats SET title = ?, updated_at = ? WHERE id = ?",
-              (title, datetime.now().isoformat(), chat_id))
+    c.execute("UPDATE chats SET title = ?, updated_at = ? WHERE id = ?", (title, datetime.now().isoformat(), chat_id))
     conn.commit()
 
-# ====================== ИНИЦИАЛИЗАЦИЯ СЕССИИ ======================
+# ====================== СЕССИЯ ======================
 if "email" not in st.session_state:
     st.session_state.email = None
 if "current_chat_id" not in st.session_state:
@@ -195,214 +247,122 @@ if "temp_chats" not in st.session_state:
 if "auth_mode" not in st.session_state:
     st.session_state.auth_mode = None
 
-# Создаём первый чат
-if st.session_state.current_chat_id is None:
-    if st.session_state.email:
-        first_id = create_chat(st.session_state.email)
-    else:
-        first_id = str(uuid.uuid4())
-        st.session_state.temp_chats[first_id] = {"title": "Новый чат", "history": []}
-    st.session_state.current_chat_id = first_id
-
 # ====================== SIDEBAR ======================
 with st.sidebar:
-    st.markdown("### ⚖️ ЮрИИ Консультант")
-    st.caption("Торайгыров Университет • 2026")
+    st.markdown("### 🌐 Тіл / Язык")
+    lang = st.selectbox("Выберите язык / Тілді таңдаңыз", options=["ru", "kz"], index=0 if st.session_state.lang=="ru" else 1)
+    st.session_state.lang = lang
+    texts = LANG[st.session_state.lang]
+
+    st.markdown(f"### {texts['sidebar_title']}")
+    st.caption(texts["sidebar_caption"])
 
     if st.session_state.email:
         st.success(f"{st.session_state.email}")
-        if st.button("Выйти", use_container_width=True):
+        if st.button(texts["logout"], use_container_width=True):
             st.session_state.email = None
             st.session_state.auth_mode = None
             st.rerun()
     else:
-        st.warning("🔑 Требуется авторизация")
-        st.subheader("Авторизация")
+        st.warning(texts["auth_required"])
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Войти", use_container_width=True, type="primary"):
+            if st.button(texts["login"], use_container_width=True, type="primary"):
                 st.session_state.auth_mode = "login"
                 st.rerun()
         with col2:
-            if st.button("Регистрация", use_container_width=True, type="secondary"):
+            if st.button(texts["register"], use_container_width=True, type="secondary"):
                 st.session_state.auth_mode = "register"
                 st.rerun()
 
     st.divider()
-
     # Новый чат
-    if st.button("➕ Новый чат", type="primary", use_container_width=True):
+    if st.button(texts["new_chat"], type="primary", use_container_width=True):
         if st.session_state.email:
-            new_id = create_chat(st.session_state.email, f"Чат {len(get_user_chats(st.session_state.email)) + 1}")
+            new_id = create_chat(st.session_state.email, f"{texts['new_chat']} {len(get_user_chats(st.session_state.email)) + 1}")
         else:
             new_id = str(uuid.uuid4())
-            st.session_state.temp_chats[new_id] = {"title": f"Чат {len(st.session_state.temp_chats) + 1}", "history": []}
+            st.session_state.temp_chats[new_id] = {"title": f"{texts['new_chat']} {len(st.session_state.temp_chats)+1}", "history": []}
         st.session_state.current_chat_id = new_id
         st.rerun()
 
-    st.subheader("Ваши чаты")
-
+    st.subheader(texts["your_chats"])
+    # Чаты пользователя
     if st.session_state.email:
-        for chat in get_user_chats(st.session_state.email):
-            chat_id = chat["id"]
-            title = chat["title"]
-            is_current = chat_id == st.session_state.current_chat_id
-            if st.button(
-                f"{'● ' if is_current else ''}{title[:40]}{'...' if len(title)>40 else ''}",
-                key=f"chat_{chat_id}",
-                use_container_width=True,
-                type="secondary" if not is_current else "primary"
-            ):
-                st.session_state.current_chat_id = chat_id
-                st.rerun()
+        chats = get_user_chats(st.session_state.email)
     else:
-        for chat_id, chat in st.session_state.temp_chats.items():
-            title = chat["title"]
-            is_current = chat_id == st.session_state.current_chat_id
-            if st.button(
-                f"{'● ' if is_current else ''}{title[:40]}{'...' if len(title)>40 else ''}",
-                key=f"temp_{chat_id}",
-                use_container_width=True,
-                type="secondary" if not is_current else "primary"
-            ):
-                st.session_state.current_chat_id = chat_id
-                st.rerun()
+        chats = [{"id": k, "title": v["title"]} for k, v in st.session_state.temp_chats.items()]
 
-    st.divider()
-
-    # Экспорт
-    if st.session_state.current_chat_id:
-        if st.session_state.email:
-            history = get_chat_messages(st.session_state.current_chat_id)
-        else:
-            history = st.session_state.temp_chats.get(st.session_state.current_chat_id, {}).get("history", [])
-
-        if history:
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("📥 TXT", use_container_width=True):
-                    txt_content = ""
-                    for msg in history:
-                        role = "Пользователь" if msg["role"] == "user" else "ЮрИИ"
-                        txt_content += f"{role}: {msg['content']}\n\n"
-                    st.download_button(
-                        label="Скачать TXT",
-                        data=txt_content,
-                        file_name=f"чат_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-                        mime="text/plain",
-                        use_container_width=True
-                    )
-            with col2:
-                if st.button("📄 PDF", use_container_width=True):
-                    if not PDF_AVAILABLE:
-                        st.error("reportlab не установлен")
-                        st.stop()
-                    pdf_filename = f"юрИИ_чат_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
-                    from reportlab.pdfbase import pdfmetrics
-                    from reportlab.pdfbase.ttfonts import TTFont
-                    font_path = "DejaVuSans.ttf"
-                    pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
-                    c = canvas.Canvas(pdf_filename, pagesize=A4)
-                    width, height = A4
-                    y = height - 80
-                    margin = 50
-                    c.setFont("DejaVuSans", 16)
-                    c.drawString(margin, y, "⚖️ ЮрИИ Консультант — Чат")
-                    y -= 30
-                    c.setFont("DejaVuSans", 11)
-                    c.drawString(margin, y, f"Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
-                    c.drawString(margin, y - 15, f"Пользователь: {st.session_state.email or 'Гость'}")
-                    y -= 50
-                    c.setFont("DejaVuSans", 11)
-                    line_height = 16
-                    for msg in history:
-                        role = "👤 Пользователь" if msg["role"] == "user" else "⚖️ ЮрИИ"
-                        text = f"{role}:\n{msg['content']}\n"
-                        lines = simpleSplit(text, "DejaVuSans", 11, width - 2*margin)
-                        for line in lines:
-                            if y < 50:
-                                c.showPage()
-                                y = height - 50
-                                c.setFont("DejaVuSans", 11)
-                            c.drawString(margin, y, line)
-                            y -= line_height
-                        y -= 10
-                    c.save()
-                    with open(pdf_filename, "rb") as f:
-                        pdf_bytes = f.read()
-                    st.download_button(
-                        label="⬇️ Скачать PDF",
-                        data=pdf_bytes,
-                        file_name=pdf_filename,
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
-                    try:
-                        os.remove(pdf_filename)
-                    except:
-                        pass
-
-    st.caption("Разработано кафедрой Computer Science")
+    for chat in chats:
+        chat_id = chat["id"]
+        title = chat["title"]
+        is_current = chat_id == st.session_state.current_chat_id
+        if st.button(
+            f"{'● ' if is_current else ''}{title[:40]}{'...' if len(title)>40 else ''}",
+            key=f"chat_{chat_id}",
+            use_container_width=True,
+            type="primary" if is_current else "secondary"
+        ):
+            st.session_state.current_chat_id = chat_id
+            st.rerun()
 
 # ====================== ГЛАВНАЯ ЧАСТЬ ======================
-st.title("⚖️ ЮрИИ Консультант")
+st.title(texts["page_title"])
 st.caption("ИИ-помощник по законодательству Республики Казахстан")
 
-# Формы логина / регистрации
+# Форма логина/регистрации
 if not st.session_state.email:
     if st.session_state.auth_mode in ["login", "register"]:
-        st.subheader("🔑 Вход" if st.session_state.auth_mode == "login" else "📝 Регистрация")
-        
+        st.subheader(texts["login_header"] if st.session_state.auth_mode=="login" else texts["register_header"])
         email = st.text_input("Email:", placeholder="example@gmail.com", key="auth_email")
-        
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("✅ Подтвердить", type="primary", use_container_width=True):
-                
+            if st.button(texts["confirm"], type="primary", use_container_width=True):
                 if email != email.lower():
-                    st.error("Email должен быть введён только маленькими буквами.")
+                    st.error(texts["email_lower_error"])
                     st.stop()
-                    
                 if "@" in email and "." in email:
                     if st.session_state.auth_mode == "register":
                         if register_user(email):
-                            st.success("Регистрация успешна!")
+                            st.success(texts["registration_success"])
                             st.session_state.email = email
                             st.session_state.auth_mode = None
                             st.rerun()
                         else:
-                            st.error("Такой email уже зарегистрирован")
-                    else:  # login
+                            st.error(texts["user_not_found"])
+                    else:
                         if login_user(email):
-                            st.success("Вход выполнен!")
+                            st.success(texts["login_success"])
                             st.session_state.email = email
                             st.session_state.auth_mode = None
                             st.rerun()
                         else:
-                            st.error("Пользователь не найден. Зарегистрируйтесь.")
+                            st.error(texts["user_not_found"])
                 else:
-                    st.error("Введите корректный email")
+                    st.error(texts["email_error"])
         with col2:
-            if st.button("❌ Отмена", use_container_width=True):
+            if st.button(texts["cancel"], use_container_width=True):
                 st.session_state.auth_mode = None
                 st.rerun()
     else:
-        st.info("Нажмите **Войти** или **Регистрация** в боковой панели")
-
+        st.info(texts["auth_required"])
 else:
-    st.success(f"Вы вошли как: **{st.session_state.email}**")
+    st.success(f"{texts['user_label']} **{st.session_state.email}**")
     st.divider()
 
-    history = get_chat_messages(st.session_state.current_chat_id) if st.session_state.email else \
-              st.session_state.temp_chats.get(st.session_state.current_chat_id, {}).get("history", [])
+    # История сообщений
+    if st.session_state.email:
+        history = get_chat_messages(st.session_state.current_chat_id)
+    else:
+        history = st.session_state.temp_chats.get(st.session_state.current_chat_id, {}).get("history", [])
 
     for msg in history:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
 
-    user_input = st.chat_input("Опишите вашу юридическую ситуацию...")
-
+    user_input = st.chat_input(texts["chat_input"])
     if user_input:
+        # Сохраняем сообщение
         if st.session_state.email:
             save_message(st.session_state.current_chat_id, "user", user_input)
         else:
@@ -411,19 +371,15 @@ else:
         with st.chat_message("user"):
             st.write(user_input)
 
+        # Ответ AI
         with st.spinner("ЮрИИ анализирует запрос по законодательству РК..."):
-            if st.session_state.email:
-                messages = [{"role": "system", "content": SYSTEM_PROMPT}] + get_chat_messages(st.session_state.current_chat_id)
-            else:
-                messages = [{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.temp_chats[st.session_state.current_chat_id]["history"]
-
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}] + (get_chat_messages(st.session_state.current_chat_id) if st.session_state.email else st.session_state.temp_chats[st.session_state.current_chat_id]["history"])
             response = client.chat.completions.create(
                 model="perplexity/sonar",
                 messages=messages,
                 temperature=0.6,
                 max_tokens=1200
             )
-
         answer = response.choices[0].message.content
 
         if st.session_state.email:
@@ -436,10 +392,5 @@ else:
         with st.chat_message("assistant"):
             st.write(answer)
 
-        st.rerun()
-
 st.divider()
-st.markdown("""
-⚠️ **Внимание:** Ответы носят исключительно информационный характер и не являются официальной юридической консультацией. 
-Для защиты ваших прав обращайтесь к адвокату или в компетентный орган.
-""")
+st.markdown(f"**{texts['attention']}**")
