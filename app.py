@@ -107,8 +107,7 @@ SYSTEM_PROMPT = """
 
 Точную статью закона (номер и название)
 Краткое и понятное объяснение статьи
-Прямую ссылку на источник (https://adilet.zan.kz
-)
+Прямую ссылку на источник (https://adilet.zan.kz)
 
 5. Формат ответа (обязательный):
 
@@ -351,8 +350,6 @@ else:
     for msg in history:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
-
-# ЧАТ
 
 # ЧАТ
 
