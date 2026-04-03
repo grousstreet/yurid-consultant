@@ -395,5 +395,57 @@ if st.session_state.email:
             with st.chat_message("assistant"):
                 st.write(answer)
 
+# ====================== ЭКСПОРТ ЧАТА ======================
+    if st.session_state.current_chat_id:
+    history = get_chat_messages(st.session_state.current_chat_id)
+
+    if history:
+        chat_text = ""
+        for msg in history:
+            role = "Пользователь" if msg["role"] == "user" else "ЮрИИ"
+            chat_text += f"{role}: {msg['content']}\n\n"
+
+        col1, col2 = st.columns(2)
+
+        # TXT
+        with col1:
+            st.download_button(
+                label=texts["download_txt"],
+                data=chat_text,
+                file_name="chat.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+
+        # PDF
+        if PDF_AVAILABLE:
+            from io import BytesIO
+
+            buffer = BytesIO()
+            c = canvas.Canvas(buffer, pagesize=A4)
+            width, height = A4
+
+            y = height - 40
+            lines = simpleSplit(chat_text, "Helvetica", 10, width - 80)
+
+            for line in lines:
+                if y < 40:
+                    c.showPage()
+                    y = height - 40
+                c.drawString(40, y, line)
+                y -= 14
+
+            c.save()
+            buffer.seek(0)
+
+            with col2:
+                st.download_button(
+                    label=texts["download_pdf"],
+                    data=buffer,
+                    file_name="chat.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+
 st.divider()
 st.markdown(f"**{texts['attention']}**")
