@@ -17,23 +17,23 @@ except ImportError:
 # ====================== ДВУЯЗЫЧНЫЙ СЛОВАРЬ ======================
 LANG = {
     "ru": {
-        "page_title": "⚖️ ЮрИИ Консультант",
-        "sidebar_title": "⚖️ ЮрИИ Консультант",
+        "page_title": "ЮрИИ Консультант",
+        "sidebar_title": "ЮрИИ Консультант",
         "sidebar_caption": "Торайгыров Университет • 2026",
         "login": "Войти",
         "register": "Регистрация",
         "logout": "Выйти",
-        "auth_required": "🔑 Требуется авторизация",
-        "new_chat": "➕ Новый чат",
+        "auth_required": "Требуется авторизация",
+        "new_chat": "Новый чат",
         "your_chats": "Ваши чаты",
         "download_txt": "Скачать TXT",
-        "download_pdf": "⬇️ Скачать PDF",
+        "download_pdf": "Скачать PDF",
         "user_label": "Вы вошли как:",
         "chat_input": "Опишите вашу юридическую ситуацию...",
         "attention": "⚠️ Внимание: Ответы носят исключительно информационный характер и не являются официальной юридической консультацией. Для защиты ваших прав обращайтесь к адвокату или в компетентный орган.",
-        "login_header": "🔑 Вход",
-        "register_header": "📝 Регистрация",
-        "confirm": "✅ Подтвердить",
+        "login_header": "Вход",
+        "register_header": "Регистрация",
+        "confirm": "Подтвердить",
         "cancel": "❌ Отмена",
         "email_error": "Введите корректный email",
         "email_lower_error": "Email должен быть введён только маленькими буквами",
@@ -43,23 +43,23 @@ LANG = {
         "export_error": "reportlab не установлен"
     },
     "kz": {
-        "page_title": "⚖️ ЮрИИ Кеңесші",
-        "sidebar_title": "⚖️ ЮрИИ Кеңесші",
+        "page_title": "ЮрИИ Кеңесші",
+        "sidebar_title": "ЮрИИ Кеңесші",
         "sidebar_caption": "Торайғыров Университет • 2026",
         "login": "Кіру",
         "register": "Тіркелу",
         "logout": "Шығу",
-        "auth_required": "🔑 Авторизация қажет",
-        "new_chat": "➕ Жаңа чат",
+        "auth_required": "Авторизация қажет",
+        "new_chat": "Жаңа чат",
         "your_chats": "Сіздің чаттарыңыз",
         "download_txt": "Жүктеу TXT",
-        "download_pdf": "⬇️ Жүктеу PDF",
+        "download_pdf": "Жүктеу PDF",
         "user_label": "Сіз кірдіңіз:",
         "chat_input": "Сіздің заңдық жағдайыңызды сипаттаңыз...",
         "attention": "⚠️ Назар аударыңыз: Жауаптар тек ақпараттық сипатта болады және ресми заңдық кеңес емес. Құқықтарыңызды қорғау үшін адвокатқа немесе тиісті органға хабарласыңыз.",
-        "login_header": "🔑 Кіру",
-        "register_header": "📝 Тіркелу",
-        "confirm": "✅ Растау",
+        "login_header": "Кіру",
+        "register_header": "Тіркелу",
+        "confirm": "Растау",
         "cancel": "❌ Болдырмау",
         "email_error": "Тек дұрыс email енгізіңіз",
         "email_lower_error": "Email тек кіші әріптермен енгізілуі керек",
@@ -76,7 +76,7 @@ if "lang" not in st.session_state:
 
 texts = LANG[st.session_state.lang]
 
-st.set_page_config(page_title=texts["page_title"], page_icon="⚖️", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title=texts["page_title"], layout="wide", initial_sidebar_state="expanded")
 
 # ====================== OpenAI ======================
 client = OpenAI(
