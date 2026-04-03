@@ -394,12 +394,14 @@ if st.session_state.email:
 
             with st.chat_message("assistant"):
                 st.write(answer)
-
 # ====================== ЭКСПОРТ ЧАТА ======================
-    if st.session_state.current_chat_id:
+
+if st.session_state.current_chat_id:
+
     history = get_chat_messages(st.session_state.current_chat_id)
 
     if history:
+
         chat_text = ""
         for msg in history:
             role = "Пользователь" if msg["role"] == "user" else "ЮрИИ"
