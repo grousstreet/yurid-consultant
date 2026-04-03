@@ -13,7 +13,6 @@ try:
     PDF_AVAILABLE = True
 except ImportError:
     PDF_AVAILABLE = False
-
 # ====================== ДВУЯЗЫЧНЫЙ СЛОВАРЬ ======================
 LANG = {
     "ru": {
