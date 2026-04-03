@@ -315,35 +315,29 @@ if not st.session_state.email:
     if st.session_state.auth_mode in ["login", "register"]:
         st.subheader(texts["login_header"] if st.session_state.auth_mode=="login" else texts["register_header"])
         email = st.text_input("Email:", placeholder="example@gmail.com", key="auth_email")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button(texts["confirm"], type="primary", use_container_width=True):
-                if email != email.lower():
-                    st.error(texts["email_lower_error"])
-                    st.stop()
-                if "@" in email and "." in email:
-                    if st.session_state.auth_mode == "register":
-                        if register_user(email):
-                            st.success(texts["registration_success"])
-                            st.session_state.email = email
-                            st.session_state.auth_mode = None
-                            st.rerun()
-                        else:
-                            st.error(texts["user_not_found"])
+        if st.button(texts["confirm"], type="primary", use_container_width=True):
+            if email != email.lower():
+                st.error(texts["email_lower_error"])
+                st.stop()
+            if "@" in email and "." in email:
+                if st.session_state.auth_mode == "register":
+                    if register_user(email):
+                        st.success(texts["registration_success"])
+                        st.session_state.email = email
+                        st.session_state.auth_mode = None
+                        st.rerun()
                     else:
-                        if login_user(email):
-                            st.success(texts["login_success"])
-                            st.session_state.email = email
-                            st.session_state.auth_mode = None
-                            st.rerun()
-                        else:
-                            st.error(texts["user_not_found"])
+                        st.error(texts["user_not_found"])
                 else:
-                    st.error(texts["email_error"])
-        with col2:
-            if st.button(texts["cancel"], use_container_width=True):
-                st.session_state.auth_mode = None
-                st.rerun()
+                    if login_user(email):
+                        st.success(texts["login_success"])
+                        st.session_state.email = email
+                        st.session_state.auth_mode = None
+                        st.rerun()
+                    else:
+                        st.error(texts["user_not_found"])
+            else:
+                st.error(texts["email_error"])
     else:
         st.info(texts["auth_required"])
 else:
@@ -360,34 +354,56 @@ else:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
 
+if not st.session_state.current_chat_id:
+    st.info("Создайте новый чат в боковой панели")
+else:
+
     user_input = st.chat_input(texts["chat_input"])
+
     if user_input:
-        # Сохраняем сообщение
+
         if st.session_state.email:
             save_message(st.session_state.current_chat_id, "user", user_input)
         else:
-            st.session_state.temp_chats[st.session_state.current_chat_id]["history"].append({"role": "user", "content": user_input})
+            st.session_state.temp_chats[st.session_state.current_chat_id]["history"].append(
+                {"role": "user", "content": user_input}
+            )
 
         with st.chat_message("user"):
             st.write(user_input)
 
-        # Ответ AI
         with st.spinner("ЮрИИ анализирует запрос по законодательству РК..."):
-            messages = [{"role": "system", "content": SYSTEM_PROMPT}] + (get_chat_messages(st.session_state.current_chat_id) if st.session_state.email else st.session_state.temp_chats[st.session_state.current_chat_id]["history"])
+
+            messages = [{"role": "system", "content": SYSTEM_PROMPT}] + (
+                get_chat_messages(st.session_state.current_chat_id)
+                if st.session_state.email
+                else st.session_state.temp_chats[st.session_state.current_chat_id]["history"]
+            )
+
             response = client.chat.completions.create(
                 model="perplexity/sonar",
                 messages=messages,
                 temperature=0.6,
                 max_tokens=1200
             )
+
         answer = response.choices[0].message.content
 
         if st.session_state.email:
+
             save_message(st.session_state.current_chat_id, "assistant", answer)
+
             if len(get_chat_messages(st.session_state.current_chat_id)) == 2:
-                update_chat_title(st.session_state.current_chat_id, user_input[:50] + ("..." if len(user_input) > 50 else ""))
+                update_chat_title(
+                    st.session_state.current_chat_id,
+                    user_input[:50] + ("..." if len(user_input) > 50 else "")
+                )
+
         else:
-            st.session_state.temp_chats[st.session_state.current_chat_id]["history"].append({"role": "assistant", "content": answer})
+
+            st.session_state.temp_chats[st.session_state.current_chat_id]["history"].append(
+                {"role": "assistant", "content": answer}
+            )
 
         with st.chat_message("assistant"):
             st.write(answer)
