@@ -394,60 +394,101 @@ if st.session_state.email:
 
             with st.chat_message("assistant"):
                 st.write(answer)
-# ====================== ЭКСПОРТ ЧАТА ======================
 
+# Экспорт
 if st.session_state.current_chat_id:
 
-    history = get_chat_messages(st.session_state.current_chat_id)
+    if st.session_state.email:
+        history = get_chat_messages(st.session_state.current_chat_id)
+    else:
+        history = st.session_state.temp_chats.get(
+            st.session_state.current_chat_id, {}
+        ).get("history", [])
 
     if history:
 
-        chat_text = ""
+        txt_content = ""
         for msg in history:
             role = "Пользователь" if msg["role"] == "user" else "ЮрИИ"
-            chat_text += f"{role}: {msg['content']}\n\n"
+            txt_content += f"{role}: {msg['content']}\n\n"
 
         col1, col2 = st.columns(2)
 
         # TXT
         with col1:
             st.download_button(
-                label=texts["download_txt"],
-                data=chat_text,
-                file_name="chat.txt",
+                label="Скачать TXT",
+                data=txt_content,
+                file_name=f"чат_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
                 mime="text/plain",
                 use_container_width=True
             )
 
         # PDF
-        if PDF_AVAILABLE:
-            from io import BytesIO
+        with col2:
 
-            buffer = BytesIO()
-            c = canvas.Canvas(buffer, pagesize=A4)
-            width, height = A4
+            if PDF_AVAILABLE:
 
-            y = height - 40
-            lines = simpleSplit(chat_text, "Helvetica", 10, width - 80)
+                from io import BytesIO
+                from reportlab.pdfbase import pdfmetrics
+                from reportlab.pdfbase.ttfonts import TTFont
 
-            for line in lines:
-                if y < 40:
-                    c.showPage()
-                    y = height - 40
-                c.drawString(40, y, line)
-                y -= 14
+                buffer = BytesIO()
 
-            c.save()
-            buffer.seek(0)
+                font_path = "DejaVuSans.ttf"
+                pdfmetrics.registerFont(TTFont("DejaVuSans", font_path))
 
-            with col2:
+                c = canvas.Canvas(buffer, pagesize=A4)
+                width, height = A4
+
+                y = height - 80
+                margin = 50
+
+                c.setFont("DejaVuSans", 16)
+                c.drawString(margin, y, "ЮрИИ Консультант — Чат")
+                y -= 30
+
+                c.setFont("DejaVuSans", 11)
+                c.drawString(margin, y, f"Дата: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+                c.drawString(margin, y - 15, f"Пользователь: {st.session_state.email or 'Гость'}")
+
+                y -= 50
+
+                line_height = 16
+
+                for msg in history:
+
+                    role = "Пользователь" if msg["role"] == "user" else "ЮрИИ"
+                    text = f"{role}:\n{msg['content']}\n"
+
+                    lines = simpleSplit(text, "DejaVuSans", 11, width - 2 * margin)
+
+                    for line in lines:
+                        if y < 50:
+                            c.showPage()
+                            y = height - 50
+                            c.setFont("DejaVuSans", 11)
+
+                        c.drawString(margin, y, line)
+                        y -= line_height
+
+                    y -= 10
+
+                c.save()
+                buffer.seek(0)
+
                 st.download_button(
-                    label=texts["download_pdf"],
+                    label="Скачать PDF",
                     data=buffer,
-                    file_name="chat.pdf",
+                    file_name=f"юрИИ_чат_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                     mime="application/pdf",
                     use_container_width=True
                 )
+
+            else:
+                st.error("reportlab не установлен")
+
+st.caption("Разработано кафедрой Computer Science")
 
 st.divider()
 st.markdown(f"**{texts['attention']}**")
