@@ -249,7 +249,7 @@ if "auth_mode" not in st.session_state:
 
 # ====================== SIDEBAR ======================
 with st.sidebar:
-    st.markdown("### 🌐 Тіл / Язык")
+    st.markdown("### Тіл / Язык")
     lang = st.selectbox("Выберите язык / Тілді таңдаңыз", options=["ru", "kz"], index=0 if st.session_state.lang=="ru" else 1)
     st.session_state.lang = lang
     texts = LANG[st.session_state.lang]
