@@ -356,11 +356,9 @@ else:
 
 # ЧАТ
 
-if not st.session_state.email:
-    # если пользователь не вошел
-    st.info(texts["auth_required"])
+# ЧАТ
 
-else:
+if st.session_state.email:
 
     if not st.session_state.current_chat_id:
         st.info("Создайте новый чат в боковой панели")
@@ -371,7 +369,6 @@ else:
 
         if user_input:
 
-            # сохраняем сообщение пользователя
             save_message(st.session_state.current_chat_id, "user", user_input)
 
             with st.chat_message("user"):
@@ -394,7 +391,6 @@ else:
 
             save_message(st.session_state.current_chat_id, "assistant", answer)
 
-            # обновляем название чата после первого вопроса
             if len(get_chat_messages(st.session_state.current_chat_id)) == 2:
                 update_chat_title(
                     st.session_state.current_chat_id,
