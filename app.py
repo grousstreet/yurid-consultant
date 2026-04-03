@@ -354,59 +354,55 @@ else:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
 
-if not st.session_state.current_chat_id:
-    st.info("Создайте новый чат в боковой панели")
+# ЧАТ
+
+if not st.session_state.email:
+    # если пользователь не вошел
+    st.info(texts["auth_required"])
+
 else:
 
-    user_input = st.chat_input(texts["chat_input"])
+    if not st.session_state.current_chat_id:
+        st.info("Создайте новый чат в боковой панели")
 
-    if user_input:
+    else:
 
-        if st.session_state.email:
+        user_input = st.chat_input(texts["chat_input"])
+
+        if user_input:
+
+            # сохраняем сообщение пользователя
             save_message(st.session_state.current_chat_id, "user", user_input)
-        else:
-            st.session_state.temp_chats[st.session_state.current_chat_id]["history"].append(
-                {"role": "user", "content": user_input}
-            )
 
-        with st.chat_message("user"):
-            st.write(user_input)
+            with st.chat_message("user"):
+                st.write(user_input)
 
-        with st.spinner("ЮрИИ анализирует запрос по законодательству РК..."):
+            with st.spinner("ЮрИИ анализирует запрос по законодательству РК..."):
 
-            messages = [{"role": "system", "content": SYSTEM_PROMPT}] + (
-                get_chat_messages(st.session_state.current_chat_id)
-                if st.session_state.email
-                else st.session_state.temp_chats[st.session_state.current_chat_id]["history"]
-            )
+                messages = [{"role": "system", "content": SYSTEM_PROMPT}] + get_chat_messages(
+                    st.session_state.current_chat_id
+                )
 
-            response = client.chat.completions.create(
-                model="perplexity/sonar",
-                messages=messages,
-                temperature=0.6,
-                max_tokens=1200
-            )
+                response = client.chat.completions.create(
+                    model="perplexity/sonar",
+                    messages=messages,
+                    temperature=0.6,
+                    max_tokens=1200
+                )
 
-        answer = response.choices[0].message.content
-
-        if st.session_state.email:
+            answer = response.choices[0].message.content
 
             save_message(st.session_state.current_chat_id, "assistant", answer)
 
+            # обновляем название чата после первого вопроса
             if len(get_chat_messages(st.session_state.current_chat_id)) == 2:
                 update_chat_title(
                     st.session_state.current_chat_id,
                     user_input[:50] + ("..." if len(user_input) > 50 else "")
                 )
 
-        else:
-
-            st.session_state.temp_chats[st.session_state.current_chat_id]["history"].append(
-                {"role": "assistant", "content": answer}
-            )
-
-        with st.chat_message("assistant"):
-            st.write(answer)
+            with st.chat_message("assistant"):
+                st.write(answer)
 
 st.divider()
 st.markdown(f"**{texts['attention']}**")
