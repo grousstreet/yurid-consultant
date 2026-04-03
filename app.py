@@ -488,7 +488,5 @@ if st.session_state.current_chat_id:
             else:
                 st.error("reportlab не установлен")
 
-st.caption("Разработано кафедрой Computer Science")
-
 st.divider()
 st.markdown(f"**{texts['attention']}**")
